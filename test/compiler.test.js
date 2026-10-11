@@ -34,7 +34,7 @@ test('number literals: ints, floats, hex, exponents, underscores', () => {
 });
 
 test('every example compiles for every target it supports', () => {
-  for (const f of fs.readdirSync(examples)) {
+  for (const f of fs.readdirSync(examples).filter((n) => n.endsWith('.pyre'))) {
     const r = compileAll(fs.readFileSync(path.join(examples, f), 'utf8'), { filename: f });
     assert.ok(r.wgsl && r.js, `${f} should compile to wgsl and js`);
     if (r.meta.entry === 'fragment') assert.ok(r.glsl.startsWith('#version 300 es'), f);

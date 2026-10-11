@@ -31,19 +31,21 @@
     "node": ">=18"
   },
   "keywords": [
-    "gpu",
-    "shader",
-    "glsl",
-    "wgsl",
-    "webgpu",
-    "webgl",
-    "compiler",
-    "language",
-    "tensor",
     "autograd",
-    "pytorch",
+    "compiler",
+    "glsl",
+    "gpgpu",
+    "gpu",
+    "language",
     "machine-learning",
-    "neural-network"
+    "neural-network",
+    "pytorch",
+    "shader",
+    "shader-language",
+    "tensor",
+    "webgl",
+    "webgpu",
+    "wgsl"
   ],
   "license": "MIT",
   "repository": {

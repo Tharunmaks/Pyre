@@ -1,4 +1,15 @@
+<div align="center">
+
 # 🔥 Pyre
+
+[![CI](https://github.com/Tharunmaks/Pyre/actions/workflows/ci.yml/badge.svg)](https://github.com/Tharunmaks/Pyre/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-ff7a1a.svg)](LICENSE)
+![Zero dependencies](https://img.shields.io/badge/dependencies-0-3ddc97.svg)
+![Targets](https://img.shields.io/badge/targets-GLSL%20%C2%B7%20WGSL%20%C2%B7%20JS-8b5cff.svg)
+
+[**Playground**](https://tharunmaks.github.io/Pyre/) · [Pyre Torch](#pyre-torch-pytorch-style-deep-learning-on-the-cpu) · [Language](#the-language) · [Chroma](https://github.com/Tharunmaks/Chroma-node)
+
+</div>
 
 **A typed GPU language with Python-style syntax.** One `.pyre` file compiles to
 
@@ -174,4 +185,4 @@ GitHub Pages (Settings → Pages → folder `/docs`).
 Pyre powers the **Chroma** platform and its **Helix** 3D engine:
 [Tharunmaks/Chroma-node](https://github.com/Tharunmaks/Chroma-node).
 
-MIT licensed.
+Contributions welcome — see [CONTRIBUTING.md](CONTRIBUTING.md). MIT licensed.

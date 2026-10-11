@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pyre Playground</title>
+<meta name="description" content="Pyre: a typed GPU language with Python-style syntax that compiles to GLSL, WGSL and JavaScript.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔥</text></svg>">
+<style>
+  :root {
+    --bg: #0b0b10; --panel: #13131b; --line: #262634; --text: #ececf3; --muted: #9a9ab0;
+    --accent: #ff7a1a; --accent2: #ffb347; --err: #ff5c7a; --ok: #46d39a;
+    --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  }
+  @media (prefers-color-scheme: light) {
+    :root:not([data-theme="dark"]) { --bg: #faf8f5; --panel: #ffffff; --line: #e6e1da; --text: #1d1a17; --muted: #6b645c; }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.5 system-ui, -apple-system, Segoe UI, sans-serif; }
+  header { display: flex; align-items: center; gap: 14px; padding: 14px 20px; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+  header h1 { font-size: 18px; margin: 0; letter-spacing: .2px; }
+  header h1 span { background: linear-gradient(90deg, var(--accent), var(--accent2)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  header p { margin: 0; color: var(--muted); font-size: 13px; flex: 1; min-width: 200px; }
+  header a, select, button { font: inherit; font-size: 13px; color: var(--text); background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 6px 12px; text-decoration: none; cursor: pointer; }
+  button.primary { background: var(--accent); border-color: var(--accent); color: #160a00; font-weight: 600; }
+  main { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; padding: 16px 20px; }
+  @media (max-width: 900px) { main { grid-template-columns: 1fr; padding: 12px 16px; } }
+  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; display: flex; flex-direction: column; min-width: 0; }
+  .bar { display: flex; gap: 8px; align-items: center; padding: 8px 10px; border-bottom: 1px solid var(--line); font-size: 13px; color: var(--muted); flex-wrap: wrap; }
+  .bar .grow { flex: 1; }
+  .editor { position: relative; height: 520px; font: 13.5px/1.55 var(--mono); }
+  .editor pre, .editor textarea { position: absolute; inset: 0; margin: 0; padding: 14px 16px; white-space: pre; overflow: auto; tab-size: 4; font: inherit; border: 0; }
+  .editor textarea { color: transparent; background: transparent; caret-color: var(--accent2); resize: none; outline: none; }
+  .editor pre { pointer-events: none; color: var(--text); }
+  .kw { color: #ff8f5a; } .ty { color: #6cc6ff; } .num { color: #c8a2ff; } .com { color: var(--muted); font-style: italic; } .dec { color: #ffd166; } .fn { color: #7ee0a8; }
+  canvas { width: 100%; aspect-ratio: 1 / 1; display: block; background: #000; }
+  #status { padding: 10px 14px; font: 12.5px/1.5 var(--mono); white-space: pre-wrap; min-height: 44px; border-top: 1px solid var(--line); }
+  #status.err { color: var(--err); } #status.ok { color: var(--ok); }
+  .tabs button[aria-selected="true"] { border-color: var(--accent); color: var(--accent2); }
+  #out { margin: 0; padding: 14px 16px; font: 12px/1.5 var(--mono); max-height: 380px; overflow: auto; white-space: pre; }
+  .wide { grid-column: 1 / -1; }
+  footer { color: var(--muted); font-size: 13px; padding: 8px 20px 30px; }
+  footer code { font-family: var(--mono); background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 1px 6px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>🔥 <span>Pyre</span> Playground</h1>
+  <p>Python-style GPU code → GLSL · WGSL · JavaScript. Everything compiles in your browser.</p>
+  <select id="example" aria-label="Example"></select>
+  <a href="https://github.com/Tharunmaks/Pyre">GitHub</a>
+</header>
+<main>
+  <section class="panel">
+    <div class="bar"><span>shader.pyre</span><span class="grow"></span><span>Ctrl/⌘+Enter compiles · Tab indents</span></div>
+    <div class="editor"><pre id="hl" aria-hidden="true"></pre><textarea id="src" spellcheck="false" aria-label="Pyre source"></textarea></div>
+  </section>
+  <section class="panel">
+    <div class="bar"><span id="fps">WebGL2 preview</span><span class="grow"></span><button id="pause">Pause</button></div>
+    <canvas id="view" width="640" height="640"></canvas>
+    <div id="status">Loading…</div>
+  </section>
+  <section class="panel wide">
+    <div class="bar tabs" role="tablist">
+      <button role="tab" data-t="glsl" aria-selected="true">GLSL (WebGL2)</button>
+      <button role="tab" data-t="wgsl" aria-selected="false">WGSL (WebGPU)</button>
+      <button role="tab" data-t="js" aria-selected="false">JavaScript (CPU)</button>
+      <span class="grow"></span><button id="runk" class="primary" hidden>Run kernel on CPU</button>
+    </div>
+    <pre id="out"></pre>
+  </section>
+</main>
+<footer>Install: <code>npm install github:Tharunmaks/Pyre</code> · then <code>npx pyre render shader.pyre</code></footer>
+<script type="module">
+import * as pyre from './pyre/index.js';
+import { EXAMPLES } from './examples.js';
+
+const $ = (id) => document.getElementById(id);
+const src = $('src'), hl = $('hl'), out = $('out'), status = $('status');
+let tab = 'glsl', result = null, paused = false;
+
+for (const name of Object.keys(EXAMPLES)) $('example').append(new Option(name, name));
+$('example').onchange = () => { src.value = EXAMPLES[$('example').value]; build(); };
+
+const KW = /\b(fn|let|var|const|if|elif|else|for|in|while|return|break|continue|pass|and|or|not|true|false|uniform|buffer|range)\b/;
+const TY = /\b(bool|int|float|vec[234]|mat[234])\b/;
+function highlight(text) {
+  const esc = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;');
+  return text.split('\n').map((line) => {
+    const hash = line.indexOf('#');
+    const code = hash >= 0 ? line.slice(0, hash) : line;
+    const html = esc(code).replace(/(@\w+)|(\b\d[\d_]*(?:\.\d*)?(?:e[+-]?\d+)?\b|0x[0-9a-f]+)|\b([a-zA-Z_]\w*)\b(?=\s*\()|\b([a-zA-Z_]\w*)\b/gi, (m, dec, num, fn, word) => {
+      if (dec) return `<span class="dec">${dec}</span>`;
+      if (num) return `<span class="num">${num}</span>`;
+      const w = fn || word;
+      if (KW.test(w) && w.match(KW)[0] === w) return `<span class="kw">${w}</span>`;
+      if (TY.test(w) && w.match(TY)[0] === w) return `<span class="ty">${w}</span>`;
+      return fn ? `<span class="fn">${w}</span>` : w;
+    });
+    return html + (hash >= 0 ? `<span class="com">${esc(line.slice(hash))}</span>` : '');
+  }).join('\n') + '\n';
+}
+const sync = () => { hl.innerHTML = highlight(src.value); hl.scrollTop = src.scrollTop; hl.scrollLeft = src.scrollLeft; };
+src.addEventListener('scroll', sync);
+let timer;
+src.addEventListener('input', () => { sync(); clearTimeout(timer); timer = setTimeout(build, 350); });
+src.addEventListener('keydown', (e) => {
+  if (e.key === 'Tab') { e.preventDefault(); document.execCommand('insertText', false, '    '); }
+  if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) { e.preventDefault(); build(); }
+});
+
+// ---- WebGL2 preview ----
+const canvas = $('view');
+const gl = canvas.getContext('webgl2');
+let program = null, uniforms = {};
+const quad = gl && gl.createBuffer();
+if (gl) {
+  gl.bindBuffer(gl.ARRAY_BUFFER, quad);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 0, 0, 0, 1, -1, 0, 1, 0, -1, 1, 0, 0, 1, 1, 1, 0, 1, 1]), gl.STATIC_DRAW);
+}
+function link(fragment) {
+  const sh = (type, code) => {
+    const s = gl.createShader(type); gl.shaderSource(s, code); gl.compileShader(s);
+    if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s));
+    return s;
+  };
+  const p = gl.createProgram();
+  gl.attachShader(p, sh(gl.VERTEX_SHADER, pyre.GLSL_VERTEX));
+  gl.attachShader(p, sh(gl.FRAGMENT_SHADER, fragment));
+  gl.bindAttribLocation(p, 0, 'position'); gl.bindAttribLocation(p, 1, 'uv'); gl.bindAttribLocation(p, 2, 'normal');
+  gl.linkProgram(p);
+  if (!gl.getProgramParameter(p, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(p));
+  return p;
+}
+function build() {
+  sync();
+  try {
+    result = pyre.compileAll(src.value, { filename: 'shader.pyre' });
+    $('runk').hidden = result.meta.entry !== 'kernel';
+    if (result.meta.entry === 'fragment' && gl) {
+      const p = link(result.glsl);
+      if (program) gl.deleteProgram(program);
+      program = p;
+      uniforms = Object.fromEntries(result.meta.uniforms.map((u) => [u.name, { type: u.type, loc: gl.getUniformLocation(p, u.name) }]));
+    }
+    status.className = 'ok';
+    status.textContent = `✓ compiled · ${result.meta.entry || 'library'} · uniforms: ${result.meta.uniforms.map((u) => `${u.name}: ${u.type}`).join(', ') || 'none'}`;
+  } catch (err) {
+    status.className = 'err';
+    status.textContent = err.format ? err.format() : String(err.message || err);
+  }
+  showOutput();
+}
+function showOutput() {
+  if (!result) return;
+  out.textContent = result[tab] || `// ${result.errors[tab] || 'not available'}`;
+}
+document.querySelectorAll('.tabs [role=tab]').forEach((b) => b.onclick = () => {
+  tab = b.dataset.t;
+  document.querySelectorAll('.tabs [role=tab]').forEach((x) => x.setAttribute('aria-selected', x === b));
+  showOutput();
+});
+$('runk').onclick = () => {
+  try {
+    const meta = result.meta;
+    const n = 16;
+    const buffers = Object.fromEntries(meta.buffers.map((b) => [b.name, Array.from({ length: n }, (_, i) => i + 1)]));
+    const unis = Object.fromEntries(meta.uniforms.map((u) => [u.name, u.type === 'int' ? n : 2]));
+    const res = pyre.runKernel(src.value, { buffers, uniforms: unis, count: n });
+    out.textContent = `// ran ${n} threads on the CPU with uniforms ${JSON.stringify(unis)}\n` + Object.entries(res).map(([k, v]) => `${k} = [${Array.from(v, (x) => +x.toFixed(4)).join(', ')}]`).join('\n');
+  } catch (err) { out.textContent = String(err.message); }
+};
+$('pause').onclick = () => { paused = !paused; $('pause').textContent = paused ? 'Play' : 'Pause'; };
+
+const ident4 = new Float32Array([1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]);
+let t0 = performance.now(), last = t0, frames = 0, time = 0;
+function frame(now) {
+  requestAnimationFrame(frame);
+  const dt = (now - last) / 1000; last = now;
+  if (!paused) time += dt;
+  if (!gl || !program) return;
+  gl.viewport(0, 0, canvas.width, canvas.height);
+  gl.useProgram(program);
+  gl.bindBuffer(gl.ARRAY_BUFFER, quad);
+  gl.enableVertexAttribArray(0); gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 20, 0);
+  gl.enableVertexAttribArray(1); gl.vertexAttribPointer(1, 2, gl.FLOAT, false, 20, 12);
+  gl.vertexAttrib3f(2, 0, 0, 1);
+  gl.uniformMatrix4fv(gl.getUniformLocation(program, 'modelViewMatrix'), false, ident4);
+  gl.uniformMatrix4fv(gl.getUniformLocation(program, 'projectionMatrix'), false, ident4);
+  gl.uniformMatrix3fv(gl.getUniformLocation(program, 'normalMatrix'), false, [1, 0, 0, 0, 1, 0, 0, 0, 1]);
+  for (const [name, u] of Object.entries(uniforms)) {
+    if (!u.loc) continue;
+    if (name === 'time' && u.type === 'float') gl.uniform1f(u.loc, time);
+    else if (name === 'resolution' && u.type === 'vec2') gl.uniform2f(u.loc, canvas.width, canvas.height);
+  }
+  gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+  frames++;
+  if (now - t0 > 1000) { $('fps').textContent = `WebGL2 preview · ${frames} fps`; frames = 0; t0 = now; }
+}
+if (!gl) status.textContent = 'WebGL2 is not available in this browser; compiled output still works.';
+const fromHash = location.hash.length > 1 ? (() => { try { return decodeURIComponent(escape(atob(location.hash.slice(1)))); } catch { return null; } })() : null;
+src.value = fromHash || EXAMPLES[Object.keys(EXAMPLES)[0]];
+build();
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>

@@ -1,0 +1,38 @@
+# A tour of the language: every feature here is checked on real GPUs by
+# scripts/gpu-check.mjs and must render identically on the CPU.
+uniform time: float
+const STEPS = 4
+const TINT: vec3 = vec3(0.9, 0.7, 1.0)
+
+fn checker(p: vec2, cells: int) -> float:
+    let c = floor(p * float(cells))
+    let parity = (int(c.x) + int(c.y)) & 1          # bitwise and on ints
+    return 1.0 if parity == 0 else 0.6               # conditional expression
+
+fn texture(input: vec2) -> vec3:                     # reserved words are renamed
+    var col = hsv2rgb(vec3(hash21(floor(input * 8.0)), 0.6, 1.0))
+    col.g *= 0.8                                     # swizzle assignment
+    return col
+
+@fragment
+fn main(uv: vec2, frag: vec2) -> vec4:
+    let m = rotate(time * 0.25) * mat2(1.2)          # matrix maths
+    let p = m * (uv - 0.5)
+    var col = texture(p + 0.5) * checker(uv, 6)
+    var glow = 0.0
+    for i in range(STEPS):
+        let r = 0.1 + 0.08 * float(i)
+        glow += 0.004 / abs(length(p) - r)
+    var k = 0
+    while k < 3:
+        k += 1
+        if k == 2:
+            continue
+        elif k > 2:
+            break
+        col = mix(col, TINT, 0.15)
+    let box = sdBox(vec3(p, 0.0), vec3(0.15))
+    col += vec3(1.0, 0.5, 0.2) * smoothstep(0.01, 0.0, abs(box))
+    col += glow * vec3(0.4, 0.6, 1.0)
+    let stripes = float(int(frag.x) % 4 == 0) * 0.05   # frag = pixel coords
+    return vec4(clamp(col - stripes, 0.0, 1.0), 1.0)

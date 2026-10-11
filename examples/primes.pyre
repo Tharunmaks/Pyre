@@ -1,0 +1,16 @@
+# Count primes per thread with trial division (integer maths on the GPU).
+buffer result: [int]
+
+fn is_prime(n: int) -> bool:
+    if n < 2:
+        return false
+    var d = 2
+    while d * d <= n:
+        if n % d == 0:
+            return false
+        d += 1
+    return true
+
+@kernel(64)
+fn sieve(id: int):
+    result[id] = 1 if is_prime(id) else 0

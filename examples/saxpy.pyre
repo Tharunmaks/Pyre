@@ -1,0 +1,10 @@
+# SAXPY: y = a * x + y, one GPU thread per element.
+uniform a: float
+uniform n: int
+buffer x: [float]
+buffer y: [float]
+
+@kernel(64)
+fn saxpy(id: int):
+    if id < n:
+        y[id] = a * x[id] + y[id]

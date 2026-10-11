@@ -1,0 +1,48 @@
+{
+  "name": "pyre-lang",
+  "version": "1.0.0",
+  "description": "Pyre: a typed GPU language with Python-style syntax that compiles to GLSL (WebGL2), WGSL (WebGPU) and JavaScript (CPU).",
+  "type": "module",
+  "main": "./src/index.js",
+  "exports": {
+    ".": "./src/index.js",
+    "./runtime": "./src/runtime.js",
+    "./png": "./src/png.js",
+    "./package.json": "./package.json"
+  },
+  "bin": {
+    "pyre": "./bin/pyre.js"
+  },
+  "files": [
+    "src",
+    "bin",
+    "examples",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "test": "node --test test/*.test.js",
+    "check": "node bin/pyre.js check examples/*.pyre",
+    "gpu-check": "node scripts/gpu-check.mjs",
+    "build:docs": "node scripts/build-docs.mjs"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "keywords": [
+    "gpu",
+    "shader",
+    "glsl",
+    "wgsl",
+    "webgpu",
+    "webgl",
+    "compiler",
+    "language"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Tharunmaks/Pyre.git"
+  },
+  "homepage": "https://github.com/Tharunmaks/Pyre#readme"
+}

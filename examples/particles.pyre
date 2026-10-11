@@ -1,0 +1,23 @@
+# Particle step: gravity, drag and a bouncy floor.
+uniform dt: float
+uniform count: int
+buffer px: [float]
+buffer py: [float]
+buffer vx: [float]
+buffer vy: [float]
+
+const GRAVITY = -9.81
+const DRAG = 0.995
+
+@kernel(128)
+fn simulate(id: int):
+    if id >= count:
+        return
+    vy[id] += GRAVITY * dt
+    vx[id] *= DRAG
+    vy[id] *= DRAG
+    px[id] += vx[id] * dt
+    py[id] += vy[id] * dt
+    if py[id] < 0.0:
+        py[id] = -py[id]
+        vy[id] = -vy[id] * 0.8

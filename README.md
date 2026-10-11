@@ -37,6 +37,41 @@ fn saxpy(id: int):
         y[id] = a * x[id] + y[id]
 ```
 
+## Pyre Torch: PyTorch-style deep learning on the CPU
+
+`pyre-lang/torch` is a tensor library with NumPy broadcasting, reverse-mode autograd, `nn` modules,
+optimizers and data loaders. It runs anywhere JavaScript runs (Node, browsers, workers) with no
+dependencies, and Pyre `@kernel` programs plug in as tensor ops.
+
+```js
+import torch from 'pyre-lang/torch';
+const { nn, optim } = torch;
+
+const model = new nn.Sequential(new nn.Linear(2, 64), new nn.ReLU(), new nn.Linear(64, 2));
+const opt = new optim.AdamW(model.parameters(), { lr: 0.01 });
+
+for (const [xb, yb] of new torch.data.DataLoader(dataset, { batchSize: 32, shuffle: true })) {
+  const loss = nn.crossEntropy(model(xb), yb);   // modules are callable, like PyTorch
+  opt.zeroGrad();
+  loss.backward();
+  opt.step();
+}
+
+const scale = torch.kernel(pyreKernelSource);     // a Pyre @kernel as a tensor op
+```
+
+| Area | What's there |
+| --- | --- |
+| Tensors | `tensor zeros ones full rand randn randint arange linspace eye cat stack where`, `reshape view permute transpose T flatten squeeze unsqueeze narrow slice get gather indexSelect` |
+| Math (all differentiable) | `add sub mul div pow neg exp log sqrt abs sin cos tanh sigmoid relu leakyRelu gelu clamp maximum minimum matmul` (batched), `sum mean std variance max min logsumexp softmax logSoftmax` |
+| `nn` | `Module` (callable, `parameters()`, `stateDict()`, `train()/eval()`), `Linear Embedding Sequential ReLU Tanh Sigmoid GELU LeakyReLU Softmax Dropout LayerNorm Flatten`, losses `MSELoss L1Loss CrossEntropyLoss NLLLoss BCELoss BCEWithLogitsLoss`, `init` |
+| `optim` | `SGD` (momentum, Nesterov, weight decay), `Adam`, `AdamW`, `RMSprop`, `StepLR`, `CosineAnnealingLR` |
+| `data` | `TensorDataset`, `DataLoader` (batching, shuffling), `spirals()` toy dataset |
+| Utilities | `noGrad`, `manualSeed` (reproducible), `save`/`load`, `accuracy`, `torch.kernel` |
+
+Every differentiable op is checked against finite differences in the test suite. Try
+`node examples/torch/spirals.mjs` (two-spiral classifier) or `examples/torch/regression.mjs`.
+
 ## Install
 
 ```sh
@@ -129,7 +164,7 @@ See [SECURITY.md](SECURITY.md).
 ## Development
 
 ```sh
-npm test                 # 23 unit tests, no dependencies
+npm test                 # 34 tests (compiler + torch gradient checks), no dependencies
 npm run gpu-check        # real WebGL2 + WebGPU in headless Chromium (needs playwright)
 ```
 

@@ -10,9 +10,7 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const dest = path.join(root, 'docs', 'pyre');
 fs.rmSync(dest, { recursive: true, force: true });
 fs.mkdirSync(dest, { recursive: true });
-for (const f of fs.readdirSync(path.join(root, 'src'))) {
-  if (f.endsWith('.js') && f !== 'png.js') fs.copyFileSync(path.join(root, 'src', f), path.join(dest, f));
-}
+fs.cpSync(path.join(root, 'src'), dest, { recursive: true, filter: (f) => !f.endsWith('png.js') });
 const files = fs.readdirSync(path.join(root, 'examples')).filter((f) => f.endsWith('.pyre'));
 const entries = files.map((f) => {
   const src = fs.readFileSync(path.join(root, 'examples', f), 'utf8');

@@ -1,14 +1,15 @@
 {
   "name": "pyre-lang",
   "version": "1.0.0",
-  "description": "Pyre: a typed GPU language with Python-style syntax that compiles to GLSL (WebGL2), WGSL (WebGPU) and JavaScript (CPU).",
+  "description": "Pyre: a typed GPU language (GLSL/WGSL/JS) plus Pyre Torch, a PyTorch-style tensor and autograd library for the CPU.",
   "type": "module",
   "main": "./src/index.js",
   "exports": {
     ".": "./src/index.js",
     "./runtime": "./src/runtime.js",
     "./png": "./src/png.js",
-    "./package.json": "./package.json"
+    "./package.json": "./package.json",
+    "./torch": "./src/torch/index.js"
   },
   "bin": {
     "pyre": "./bin/pyre.js"
@@ -37,7 +38,12 @@
     "webgpu",
     "webgl",
     "compiler",
-    "language"
+    "language",
+    "tensor",
+    "autograd",
+    "pytorch",
+    "machine-learning",
+    "neural-network"
   ],
   "license": "MIT",
   "repository": {
